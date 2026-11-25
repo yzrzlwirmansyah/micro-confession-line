@@ -22,7 +22,13 @@ MAX_MESSAGE_CHARS = 200
 
 
 def validate(entry: str) -> str | None:
-    """Return an error message if the entry is invalid, else None."""
+    """Return an error message if the entry is invalid, else None.
+
+    The entry must be exactly two lines: a "To: <recipient>" address line
+    followed by the confession itself. A missing "To: " prefix means the
+    two-part format is broken, so it fails the gate instead of passing
+    as a one-part text.
+    """
     if not entry or not entry.strip():
         return "entry is empty or whitespace-only"
     if len(entry) > MAX_TOTAL_CHARS:
@@ -32,6 +38,8 @@ def validate(entry: str) -> str | None:
     lines = entry.split("\n")
     if len(lines) != 2:
         return f"entry must be exactly 2 lines, got {len(lines)}"
+    if not lines[0].startswith("To: "):
+        return 'first line must start with "To: " (address line missing)'
     if any("\n" in line or "\r" in line for line in lines):
         return "a line contains a line break"
     if len(lines[1]) > MAX_MESSAGE_CHARS:
